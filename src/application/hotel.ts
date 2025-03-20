@@ -37,8 +37,6 @@ export const createHotel = async (req:Request, res:Response,next:NextFunction) =
         if (
             !hotel.name ||
             !hotel.location ||
-            !hotel.rating ||
-            !hotel.reviews ||
             !hotel.image ||
             !hotel.price ||
             !hotel.description
@@ -49,8 +47,6 @@ export const createHotel = async (req:Request, res:Response,next:NextFunction) =
        await Hotel.create({
         name: hotel.name,
         location: hotel.location,
-        rating:parseFloat(hotel.rating),
-        reviews:parseFloat(hotel.reviews),
         image: hotel.image,
         price:parseInt(hotel.price),
         description: hotel.description
