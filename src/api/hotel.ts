@@ -1,5 +1,7 @@
+import { isAuthenticated } from './middleware/authentication-middleware';
 import express from "express";
 import { getAllHotels,getHotelById,createHotel,deleteHotel,updateHotel } from "../application/hotel";
+import { isAdmin } from './middleware/authorization-middleware';
 
 const hotelsRouter = express.Router();
 
@@ -12,7 +14,7 @@ const hotelsRouter = express.Router();
 //alternative way to write the above code
 hotelsRouter.route("/")
     .get(getAllHotels)
-    .post(createHotel);
+    .post(isAuthenticated,isAdmin,createHotel);
 
 hotelsRouter.route("/:id")
     .get(getHotelById)
