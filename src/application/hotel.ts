@@ -4,6 +4,8 @@ import NotFoundError from "../domain/errors/not-found-error";
 import ValidationError from "../domain/errors/validation-error";
 import { CreateHotelDTO } from "../domain/dtos/hotel";
 
+import OpenAI from "openai";
+
 export const getAllHotels = async (req:Request, res:Response,next:NextFunction) => {
    try{
     const hotels=await Hotel.find({});
@@ -30,6 +32,40 @@ export const getHotelById = async (req:Request, res:Response,next:NextFunction) 
     
 }
 
+export const generateResponse =async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const {prompt} = req.body;
+
+    const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const completion = await openai.chat.completions.create({
+        model:"gpt-4o",
+        messages:[
+        //     {role:"system",
+        //     content: 
+        //     `You are an assistant that will catgorize the words that a user gives and give the labels and show an output.
+        //     Return this response as a following example:
+        //     user:Lake,Cat,dog,tree;
+        //     respinse:[{label:Nature,words:['Cat','dog']}]`
+        // },
+          {role:"user",content:prompt},  
+        ],
+        store:true,
+    });
+
+    res.status(200).
+    json({ 
+        message:
+        {role:"assistant" ,
+            content:completion.choices[0].message.content}});
+    return;
+};  
+
 export const createHotel = async (req:Request, res:Response,next:NextFunction) => {
     try{
         const hotel = CreateHotelDTO.safeParse(req.body); // safeparse checks of the req body is in the shape of createDTO
@@ -42,7 +78,7 @@ export const createHotel = async (req:Request, res:Response,next:NextFunction) =
         name: hotel.data.name,
         location: hotel.data.location,
         image: hotel.data.image,
-        price:parseInt(hotel.data.price),
+        price: hotel.data.price, 
         description: hotel.data.description,
        })
         //return the response
