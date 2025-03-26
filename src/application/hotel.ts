@@ -3,6 +3,7 @@ import Hotel from "../infrastructure/schemas/Hotel";
 import NotFoundError from "../domain/errors/not-found-error";
 import ValidationError from "../domain/errors/validation-error";
 import { CreateHotelDTO } from "../domain/dtos/hotel";
+import Booking from "../infrastructure/schemas/Booking";
 
 import OpenAI from "openai";
 
@@ -66,28 +67,31 @@ export const generateResponse =async (
     return;
 };  
 
-export const createHotel = async (req:Request, res:Response,next:NextFunction) => {
-    try{
-        const hotel = CreateHotelDTO.safeParse(req.body); // safeparse checks of the req body is in the shape of createDTO
-    
-       if(!hotel.success){ // if the req body is not in the shape of createDTO
-           throw new ValidationError(hotel.error.message);
-         }
-        //add the new hotel to the array
-       await Hotel.create({
+export const createHotel = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const hotel = CreateHotelDTO.safeParse(req.body);
+  
+      if (!hotel.success) {
+        throw new ValidationError(hotel.error.message);
+      }
+  
+      const newHotel = await Hotel.create({
         name: hotel.data.name,
         location: hotel.data.location,
         image: hotel.data.image,
-        price: hotel.data.price, 
         description: hotel.data.description,
-       })
-        //return the response
-        res.status(201).send();
-        return; // this is to signify function is exiting
-    }catch(error){
-        next(error);
+        rating: hotel.data.rating,
+        reviews: hotel.data.reviews,
+        amenities: hotel.data.amenities || [],
+        rooms: hotel.data.rooms, 
+      });
+  
+      res.status(201).json(newHotel);
+      return;
+    } catch (error) {
+      next(error);
     }
-}
+  };
 
 export const deleteHotel = async (req:Request, res:Response,next:NextFunction) => {
     try{
@@ -103,31 +107,81 @@ export const deleteHotel = async (req:Request, res:Response,next:NextFunction) =
         next(error);
     }
 }
+export const updateHotel = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const hotelId = req.params.id; 
 
-export const updateHotel = async (req:Request, res:Response,next:NextFunction) => {
-   try{
-    const hotelId = req.params.hotelId;
-    const updatedHotel = req.body;
-  
-    // Validate the request data
-    if (
-      !updatedHotel.name ||
-      !updatedHotel.location ||
-      !updatedHotel.rating ||
-      !updatedHotel.reviews ||
-      !updatedHotel.image ||
-      !updatedHotel.price ||
-      !updatedHotel.description
-    ) {
-     throw new ValidationError("Invalid hotel data");
+    const updatedHotelData = CreateHotelDTO.partial().safeParse(req.body);
+    if (!updatedHotelData.success) {
+      throw new ValidationError(updatedHotelData.error.message);
     }
+
+    // Check if the hotel exists before attempting to update
+    const existingHotel = await Hotel.findById(hotelId);
   
-    await Hotel.findByIdAndUpdate(hotelId, updatedHotel);
-  
-    // Return the response
-    res.status(200).send();
-    return;
-}catch(error){
+    if (!existingHotel) {
+      throw new NotFoundError(`Hotel with ID ${hotelId} not found`);
+    }
+
+    // Perform the update
+    const hotel = await Hotel.findByIdAndUpdate(
+      hotelId,
+      { $set: updatedHotelData.data }, 
+      { new: true, runValidators: true } 
+    );
+
+    
+    if (!hotel) {
+      throw new NotFoundError("Hotel not found after update (unexpected)");
+    }
+
+    console.log("Updated Hotel:", hotel);
+    res.status(200).json(hotel);
+  } catch (error) {
+    console.error("Error in updateHotel:", error);
     next(error);
-}
-  };
+  }
+};
+
+export const getTopTrendingHotels = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const trendingHotels = await Booking.aggregate([
+      { $match: { status: { $ne: "cancelled" } } }, // Exclude cancelled bookings
+      { $group: { _id: "$hotelId", bookingCount: { $sum: 1 } } }, // Count bookings per hotel
+      {
+        $lookup: {
+          from: "hotels",
+          localField: "_id",
+          foreignField: "_id",
+          as: "hotelDetails",
+        },
+      },
+      { $unwind: "$hotelDetails" },
+      { $match: { "hotelDetails.rating": { $gte: 4.0 } } }, // Filter for rating >= 4.0
+      { $sort: { bookingCount: -1 } }, // Sort by booking count descending
+      { $limit: 6 }, // Limit to top 6
+      {
+        $project: {
+          _id: "$hotelDetails._id",
+          name: "$hotelDetails.name",
+          location: "$hotelDetails.location",
+          image: "$hotelDetails.image",
+          description: "$hotelDetails.description",
+          rating: "$hotelDetails.rating",
+          reviews: "$hotelDetails.reviews",
+          amenities: "$hotelDetails.amenities",
+          rooms: "$hotelDetails.rooms",
+          bookingCount: 1,
+        },
+      },
+    ]);
+
+    if (!trendingHotels.length) {
+      throw new NotFoundError("No trending hotels found with rating >= 4.0");
+    }
+
+    res.status(200).json(trendingHotels);
+  } catch (error) {
+    next(error);
+  }
+};

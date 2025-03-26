@@ -1,6 +1,7 @@
 import { isAuthenticated } from './middleware/authentication-middleware';
 import express from "express";
-import { getAllHotels,getHotelById,createHotel,deleteHotel,updateHotel,generateResponse } from "../application/hotel";
+import { getRoomAvailability } from '../application/booking';
+import { getAllHotels,getHotelById,createHotel,deleteHotel,updateHotel,generateResponse,getTopTrendingHotels } from "../application/hotel";
 import { isAdmin } from './middleware/authorization-middleware';
 import { createEmbeddings } from './embedding';
 import { retrieve } from '../application/retrieve';
@@ -17,13 +18,19 @@ const hotelsRouter = express.Router();
 hotelsRouter.route("/")
     .get(getAllHotels)
     .post(isAuthenticated,isAdmin,createHotel);
-
+    
+hotelsRouter.route("/top-trending")
+    .get(getTopTrendingHotels);
+  
 hotelsRouter.route("/:id")
     .get(getHotelById)
     .delete(deleteHotel)
     .put(updateHotel);
 
 hotelsRouter.route("/embeddings/create").post(createEmbeddings);
-hotelsRouter.route("/search/retrieve").get(retrieve)
+hotelsRouter.route("/search/retrieve").get(retrieve);
+
+hotelsRouter.route("/:hotelId/availability")
+    .get( getRoomAvailability);
 
 export default hotelsRouter;  
