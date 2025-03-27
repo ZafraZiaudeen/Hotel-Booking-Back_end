@@ -24,8 +24,8 @@ hotelsRouter.route("/top-trending")
   
 hotelsRouter.route("/:id")
     .get(getHotelById)
-    .delete(deleteHotel)
-    .put(updateHotel);
+    .delete(isAuthenticated,isAdmin,deleteHotel)
+    .put(isAuthenticated,isAdmin,updateHotel);
 
 hotelsRouter.route("/embeddings/create").post(createEmbeddings);
 hotelsRouter.route("/search/retrieve").get(retrieve);
