@@ -6,6 +6,7 @@ import connectDB from "./infrastructure/db";
 import cors from "cors"
 import globalErrorHandlingMinddleware from "./api/middleware/global-error-handling-middleware";
 import { clerkMiddleware } from "@clerk/express";
+import favoritesRouter from "./api/favorite";
 
 // Create an express application
 const app = express();
@@ -20,6 +21,7 @@ connectDB();
 
 app.use("/api/hotels", hotelsRouter);
 app.use("/api/bookings",bookingsRouter);
+app.use("/api/favorites",favoritesRouter)
 
 app.use(globalErrorHandlingMinddleware);// this should be placed after all handler function
 

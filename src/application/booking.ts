@@ -37,7 +37,7 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
         hotelId,
         "roomAssignments.roomType": roomType,
         $or: [{ checkIn: { $lt: checkOut }, checkOut: { $gt: checkIn } }],
-        status: { $ne: "cancelled" }, // Exclude cancelled bookings
+        status: { $ne: "cancelled" }, 
       });
 
       const bookedRoomNumbers = new Set(
@@ -68,7 +68,7 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
         roomNumbers,
       })),
       specialRequests,
-      status: "ongoing", // Explicitly set status to "ongoing"
+      status: "ongoing",
     });
 
     res.status(201).json({
@@ -163,7 +163,7 @@ export const getRoomAvailability = async (req: Request, res: Response, next: Nex
     const overlappingBookings = await Booking.find({
       hotelId,
       $or: [{ checkIn: { $lt: checkOutDate }, checkOut: { $gt: checkInDate } }],
-      status: { $ne: "cancelled" }, // Exclude cancelled bookings
+      status: { $ne: "cancelled" }, 
     });
 
     const availability = hotel.rooms.map((room) => {
