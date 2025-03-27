@@ -70,7 +70,7 @@ const bookingSchema = new mongoose.Schema(
 bookingSchema.index({ hotelId: 1 });
 bookingSchema.index({ checkIn: 1, checkOut: 1 });
 bookingSchema.index({ "roomAssignments.roomType": 1 });
-bookingSchema.index({ status: 1 }); // Index for status queries
+bookingSchema.index({ status: 1 }); 
 
 const Booking = mongoose.model("Booking", bookingSchema);
 
