@@ -17,7 +17,7 @@ const app = express();
 app.use(clerkMiddleware());
 // Middleware to parse the JSON data in the request body
 app.use(express.json());
-app.use(cors({ origin: process.env.FRONTEND_URL }));
+app.use(cors({ origin: "https://aidf-horizone-frontend-zafra.netlify.app/"}));
 
 
 console.log("Server starting - Running initial booking status update...");
