@@ -6,17 +6,56 @@ import { CreateHotelDTO } from "../domain/dtos/hotel";
 import Booking from "../infrastructure/schemas/Booking";
 
 import OpenAI from "openai";
+export const getAllHotels = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Extract query parameters
+    const { location, sortByPrice } = req.query;
 
-export const getAllHotels = async (req:Request, res:Response,next:NextFunction) => {
-   try{
-    const hotels=await Hotel.find({});
+    // Build the query for filtering
+    const query: any = {};
+
+    // location filter if provided
+    if (location && typeof location === "string") {
+      query.location = { $regex: location, $options: "i" }; 
+    }
+
+    // Validate sortByPrice parameter
+    let sortOption: 1 | -1 | undefined;
+    if (sortByPrice) {
+      if (typeof sortByPrice !== "string" || !["asc", "desc"].includes(sortByPrice)) {
+        throw new ValidationError("sortByPrice must be either 'asc' or 'desc'");
+      }
+      sortOption = sortByPrice === "asc" ? 1 : -1;
+    }
+
+    // aggregation pipeline to compute the lowest price and sort
+    const hotels = await Hotel.aggregate([
+      { $match: query },
+      {
+        $addFields: {
+          lowestPrice: {
+            $min: "$rooms.price", 
+          },
+        },
+      },
+      ...(sortOption ? [{ $sort: { lowestPrice: sortOption } }] : []),
+      {
+        $project: {
+          lowestPrice: 0, 
+        },
+      },
+    ]);
+
+    if (!hotels || hotels.length === 0) {
+      throw new NotFoundError("No hotels found matching the criteria");
+    }
+
     res.status(200).json(hotels);
-  return;
-   }catch(error){
-       next(error);
-
-   }
-}
+    return;
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getHotelById = async (req:Request, res:Response,next:NextFunction) => {
     try{
@@ -181,6 +220,25 @@ export const getTopTrendingHotels = async (req: Request, res: Response, next: Ne
     }
 
     res.status(200).json(trendingHotels);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getHotelLocations = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const locations = await Hotel.distinct("location");
+
+    const countries = locations
+      .map((location) => {
+        const parts = location.split(", ");
+        return parts[parts.length - 1]; 
+      })
+      .filter((country, index, self) => 
+        country && self.indexOf(country) === index 
+      );
+
+    res.status(200).json(countries);
   } catch (error) {
     next(error);
   }

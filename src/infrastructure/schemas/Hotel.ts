@@ -79,6 +79,7 @@ const hotelSchema = new mongoose.Schema({
         },
     },
 });
-
+hotelSchema.index({ location: 1 });
+hotelSchema.index({ "rooms.price": 1 });
 const Hotel = mongoose.model("Hotel", hotelSchema);
 export default Hotel;
