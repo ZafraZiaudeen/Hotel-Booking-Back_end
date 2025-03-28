@@ -17,9 +17,8 @@ const app = express();
 app.use(clerkMiddleware());
 // Middleware to parse the JSON data in the request body
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: process.env.FRONTEND_URL }));
 
-connectDB();
 
 console.log("Server starting - Running initial booking status update...");
 updateBookingStatus().then(() => {
@@ -43,8 +42,7 @@ cron.schedule("0 * * * *", () => {
 
 app.use(globalErrorHandlingMinddleware);// this should be placed after all handler function
 
-// Define port to run the server
-app.listen(8000, () => {
-  console.log('Server is running on http://localhost:8000');
-});
-  
+// Define the port to run the server
+connectDB();
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
