@@ -7,6 +7,9 @@ import cors from "cors"
 import globalErrorHandlingMinddleware from "./api/middleware/global-error-handling-middleware";
 import { clerkMiddleware } from "@clerk/express";
 import favoritesRouter from "./api/favorite";
+import { updateBookingStatus } from "./application/booking";
+
+const cron = require("node-cron");
 
 // Create an express application
 const app = express();
@@ -18,10 +21,25 @@ app.use(cors());
 
 connectDB();
 
+console.log("Server starting - Running initial booking status update...");
+updateBookingStatus().then(() => {
+  console.log("Initial booking status update completed.");
+}).catch((err) => {
+  console.error("Error during initial booking status update:", err);
+});
 
 app.use("/api/hotels", hotelsRouter);
 app.use("/api/bookings",bookingsRouter);
-app.use("/api/favorites",favoritesRouter)
+app.use("/api/favorites",favoritesRouter);
+
+cron.schedule("0 * * * *", () => {
+  console.log("Running scheduled booking status update...");
+  updateBookingStatus().then(() => {
+    console.log("Scheduled booking status update completed.");
+  }).catch((err) => {
+    console.error("Error during scheduled booking status update:", err);
+  });
+});
 
 app.use(globalErrorHandlingMinddleware);// this should be placed after all handler function
 
