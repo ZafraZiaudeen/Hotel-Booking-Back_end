@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Room DTO aligned with the form's room schema
+// Room DTO aligned with the updated room schema
 export const RoomDTO = z
   .object({
     type: z.string().min(1, "Room type is required"),
@@ -13,7 +13,7 @@ export const RoomDTO = z
     path: ["to"],
   });
 
-// DTO => Data Transfer Object
+// DTO for creating a hotel
 export const CreateHotelDTO = z.object({
   name: z.string().min(1, "Hotel name is required"),
   location: z.string().min(1, "Location is required"),

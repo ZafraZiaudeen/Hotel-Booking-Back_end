@@ -1,7 +1,7 @@
 import { isAuthenticated } from './middleware/authentication-middleware';
 import express from "express";
 import { getRoomAvailability } from '../application/booking';
-import { getAllHotels,getHotelById,createHotel,deleteHotel,updateHotel,generateResponse,getTopTrendingHotels, getHotelLocations } from "../application/hotel";
+import { getAllHotels,getHotelById,createHotel,deleteHotel,generateResponse,getTopTrendingHotels, getHotelLocations } from "../application/hotel";
 import { isAdmin } from './middleware/authorization-middleware';
 import { createEmbeddings } from './embedding';
 import { retrieve } from '../application/retrieve';
@@ -28,7 +28,7 @@ hotelsRouter.route("/locations")
 hotelsRouter.route("/:id")
     .get(getHotelById)
     .delete(isAuthenticated,isAdmin,deleteHotel)
-    .put(isAuthenticated,isAdmin,updateHotel);
+    // .put(isAuthenticated,isAdmin,updateHotel);
 
 hotelsRouter.route("/embeddings/create").post(createEmbeddings);
 hotelsRouter.route("/search/retrieve").get(retrieve);
@@ -36,4 +36,4 @@ hotelsRouter.route("/search/retrieve").get(retrieve);
 hotelsRouter.route("/:hotelId/availability")
     .get( getRoomAvailability);
 
-export default hotelsRouter;  
+export default hotelsRouter;

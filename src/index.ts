@@ -8,6 +8,9 @@ import globalErrorHandlingMinddleware from "./api/middleware/global-error-handli
 import { clerkMiddleware } from "@clerk/express";
 import favoritesRouter from "./api/favorite";
 import { updateBookingStatus } from "./application/booking";
+import { handleWebhook } from "./application/payment";
+import bodyParser from "body-parser";
+import paymentsRouter from "./api/payment";
 
 const cron = require("node-cron");
 
@@ -16,8 +19,8 @@ const app = express();
 
 app.use(clerkMiddleware());
 // Middleware to parse the JSON data in the request body
-app.use(express.json());
-app.use(cors({ origin: "https://aidf-horizone-frontend-zafra.netlify.app"}));
+
+app.use(cors());
 
 
 console.log("Server starting - Running initial booking status update...");
@@ -27,9 +30,18 @@ updateBookingStatus().then(() => {
   console.error("Error during initial booking status update:", err);
 });
 
+
+app.post(
+  "/api/stripe/webhook",
+  bodyParser.raw({ type: "application/json" }),
+  handleWebhook
+);
+
+app.use(express.json());
 app.use("/api/hotels", hotelsRouter);
 app.use("/api/bookings",bookingsRouter);
 app.use("/api/favorites",favoritesRouter);
+app.use("/api/payments",paymentsRouter);
 
 cron.schedule("0 * * * *", () => {
   console.log("Running scheduled booking status update...");

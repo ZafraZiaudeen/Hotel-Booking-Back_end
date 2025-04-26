@@ -37,7 +37,7 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
         hotelId,
         "roomAssignments.roomType": roomType,
         $or: [{ checkIn: { $lt: checkOut }, checkOut: { $gt: checkIn } }],
-        status: { $ne: "cancelled" }, 
+        status: { $ne: "cancelled" },
       });
 
       const bookedRoomNumbers = new Set(
@@ -71,17 +71,18 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
       status: "ongoing",
     });
 
+    console.log("Created booking:", booking);
+
+    // Return booking data at root level
     res.status(201).json({
-      message: "Booking created successfully",
-      booking: {
-        _id: booking._id,
-        hotelId: booking.hotelId,
-        checkIn: booking.checkIn,
-        checkOut: booking.checkOut,
-        roomAssignments: booking.roomAssignments,
-        specialRequests: booking.specialRequests,
-        status: booking.status,
-      },
+      _id: booking._id.toString(),
+      hotelId: booking.hotelId,
+      userId: booking.userId,
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      roomAssignments: booking.roomAssignments,
+      specialRequests: booking.specialRequests,
+      status: booking.status,
     });
   } catch (error) {
     next(error);
@@ -323,6 +324,23 @@ export const getBookingsForUser = async (req: Request, res: Response, next: Next
     );
 
     res.status(200).json(bookingsWithHotelDetails);
+  } catch (error) {
+    next(error);
+  }
+};
+export const getBookingById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const bookingId = req.params.bookingId;
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      throw new NotFoundError("Booking not found");
+    }
+    res.status(200).json(booking);
+    return;
   } catch (error) {
     next(error);
   }
