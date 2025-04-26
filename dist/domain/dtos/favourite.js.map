@@ -1,0 +1,1 @@
+{"version":3,"file":"favourite.js","sourceRoot":"","sources":["../../../src/domain/dtos/favourite.ts"],"names":[],"mappings":";;;AAAA,2BAAwB;AAEX,QAAA,iBAAiB,GAAG,OAAC,CAAC,MAAM,CAAC;IACxC,OAAO,EAAE,OAAC,CAAC,MAAM,EAAE,CAAC,MAAM,CACxB,UAAC,GAAG,IAAK,OAAA,mBAAmB,CAAC,IAAI,CAAC,GAAG,CAAC,EAA7B,CAA6B,EACtC,EAAE,OAAO,EAAE,wBAAwB,EAAE,CACtC;CACF,CAAC,CAAC"}
