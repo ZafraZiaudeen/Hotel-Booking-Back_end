@@ -280,25 +280,31 @@ export const updateBookingStatus = async () => {
 
 export const getBookingsForUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log("Fetching bookings for user:", req.auth?.userId);
     const user = req.auth;
+    if (!user?.userId) {
+      throw new ValidationError("User ID not provided");
+    }
 
-    // Fetch bookings for the authenticated user
     const bookings = await Booking.find({ userId: user.userId });
+    console.log("Found bookings:", bookings.length);
     if (!bookings.length) {
       throw new NotFoundError("No bookings found for this user");
     }
 
-    // Fetch hotel details for each booking
     const bookingsWithHotelDetails = await Promise.all(
       bookings.map(async (booking) => {
+        console.log("Fetching hotel for booking:", booking._id);
         const hotel = await Hotel.findById(booking.hotelId);
         if (!hotel) {
           throw new NotFoundError(`Hotel with ID ${booking.hotelId} not found`);
         }
 
-        // Map room assignments to include price and room numbers
         const roomAssignmentsWithDetails = booking.roomAssignments.map((ra) => {
-          const room = hotel.rooms.find((r) => r.type === ra.roomType);
+          const room = hotel.rooms?.find((r) => r.type === ra.roomType);
+          if (!room) {
+            console.warn(`Room type ${ra.roomType} not found in hotel ${hotel._id}`);
+          }
           return {
             roomType: ra.roomType,
             roomNumbers: ra.roomNumbers,
@@ -325,6 +331,7 @@ export const getBookingsForUser = async (req: Request, res: Response, next: Next
 
     res.status(200).json(bookingsWithHotelDetails);
   } catch (error) {
+    console.error("Error in getBookingsForUser:", error);
     next(error);
   }
 };
