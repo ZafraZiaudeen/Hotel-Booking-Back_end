@@ -136,7 +136,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         bookingId: bookingId.toString(),
       },
     });
-
+    console.log("Return URL:", session.return_url);
     console.log("Checkout Session created:", session.id);
     res.status(200).json({ clientSecret: session.client_secret });
   } catch (error) {
