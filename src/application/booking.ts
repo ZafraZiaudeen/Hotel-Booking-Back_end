@@ -277,7 +277,6 @@ export const updateBookingStatus = async () => {
     console.error("Error updating booking statuses:", error);
   }
 };
-
 export const getBookingsForUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     console.log("Fetching bookings for user:", req.auth?.userId);
@@ -323,6 +322,7 @@ export const getBookingsForUser = async (req: Request, res: Response, next: Next
           roomAssignments: roomAssignmentsWithDetails,
           specialRequests: booking.specialRequests,
           status: booking.status,
+          paymentStatus: booking.paymentStatus || "pending", 
           createdAt: booking.createdAt,
           updatedAt: booking.updatedAt,
         };
@@ -335,6 +335,7 @@ export const getBookingsForUser = async (req: Request, res: Response, next: Next
     next(error);
   }
 };
+
 export const getBookingById = async (
   req: Request,
   res: Response,
