@@ -4,6 +4,7 @@ import stripe from "../infrastructure/stripe";
 import Hotel from "../infrastructure/schemas/Hotel";
 import NotFoundError from "../domain/errors/not-found-error";
 import ValidationError from "../domain/errors/validation-error";
+import { clerkClient } from "@clerk/express";
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 const FRONTEND_URL = process.env.FRONTEND_URL as string;
@@ -39,6 +40,100 @@ async function fulfillCheckout(sessionId: string) {
   });
 
   console.log(`Fulfilled booking ${booking._id} for Checkout Session ${sessionId}`);
+
+  // Trigger n8n webhook for sending booking receipt email
+  const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
+  if (n8nWebhookUrl) {
+    try {
+      // Fetch hotel and user details for the email
+      const hotel = await Hotel.findById(booking.hotelId);
+      const user = await clerkClient.users.getUser(booking.userId);
+      
+      if (hotel && user) {
+        const userEmail = user.emailAddresses[0]?.emailAddress;
+        const userName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Guest";
+
+        const checkInDate = new Date(booking.checkIn);
+        const checkOutDate = new Date(booking.checkOut);
+        const numberOfNights = Math.max(
+          1,
+          Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24))
+        );
+
+        let totalPrice = 0;
+        const roomDetails = booking.roomAssignments.map((assignment) => {
+          const room = hotel.rooms.find((r) => r.type === assignment.roomType);
+          const roomPrice = room ? room.price : 0;
+          const roomTotal = roomPrice * assignment.roomNumbers.length * numberOfNights;
+          totalPrice += roomTotal;
+
+          return {
+            roomType: assignment.roomType,
+            roomNumbers: assignment.roomNumbers.join(", "),
+            numberOfRooms: assignment.roomNumbers.length,
+            pricePerNight: roomPrice,
+            subtotal: roomTotal,
+          };
+        });
+
+        const webhookPayload = {
+          userEmail,
+          userName,
+          bookingId: booking._id.toString(),
+          bookingStatus: booking.status,
+          paymentStatus: "PAID",
+          specialRequests: booking.specialRequests || "None",
+          hotelName: hotel.name,
+          hotelLocation: hotel.location,
+          hotelImage: hotel.image,
+          hotelRating: hotel.rating,
+          hotelAmenities: hotel.amenities.join(", "),
+          checkInDate: checkInDate.toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          checkOutDate: checkOutDate.toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          numberOfNights,
+          roomDetails,
+          totalPrice: totalPrice.toFixed(2),
+          currency: "USD",
+          bookingCreatedAt: new Date(booking.createdAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+
+        const response = await fetch(n8nWebhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(webhookPayload),
+        });
+
+        if (response.ok) {
+          console.log(`Successfully triggered n8n webhook for booking ${booking._id}`);
+        } else {
+          console.error(`Failed to trigger n8n webhook: ${response.statusText}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error triggering n8n webhook:", error);
+      // Don't throw error to prevent payment fulfillment from failing
+    }
+  } else {
+    console.log("N8N_WEBHOOK_URL not configured, skipping email notification");
+  }
 }
 
 export const handleWebhook = async (req: Request, res: Response) => {

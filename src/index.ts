@@ -11,6 +11,7 @@ import { updateBookingStatus } from "./application/booking";
 import { handleWebhook } from "./application/payment";
 import bodyParser from "body-parser";
 import paymentsRouter from "./api/payment";
+import webhookRouter from "./api/webhook";
 
 const cron = require("node-cron");
 
@@ -42,6 +43,7 @@ app.use("/api/hotels", hotelsRouter);
 app.use("/api/bookings",bookingsRouter);
 app.use("/api/favorites",favoritesRouter);
 app.use("/api/payments",paymentsRouter);
+app.use("/api/webhooks",webhookRouter);
 
 cron.schedule("0 * * * *", () => {
   console.log("Running scheduled booking status update...");
