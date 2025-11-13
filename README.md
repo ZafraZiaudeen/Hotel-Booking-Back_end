@@ -4,14 +4,17 @@
 The **Hotel Booking System** backend is a robust API built with **Node.js** and **Express**, handling hotel data management, user authentication, hotel booking, wishlist functionality, and AI-powered search capabilities. It integrates with **MongoDB** for storage and utilizes **OpenAI** and **LangChain** for AI-driven hotel search. The backend provides RESTful endpoints for hotel management, booking, wishlist, and search functionality.
 
 ## Features
-- 🏨 **Hotel Management**: CRUD operations for hotels (create, read, update, delete).  
-- 🔍 **Vector Search**: AI-powered hotel search using embeddings and cosine similarity.  
-- 🔒 **Authentication**: Secure sign-in/sign-up powered by **Clerk**.  
-- 🚪 **Authorization**: Role-based access (e.g., admin-only hotel creation).  
-- 📡 **RESTful API**: Well-structured endpoints for hotel management, bookings, and wishlist.  
-- 💾 **Database**: Uses **MongoDB** with Mongoose.  
-- ⭐ **Wishlist**: Users can add hotels to their wishlist and retrieve them.  
-- 📅 **Hotel Booking**: Users can book hotels by selecting rooms, check-in/check-out dates, and special requests.  
+- 🏨 **Hotel Management**: CRUD operations for hotels (create, read, update, delete).
+- 🔍 **Vector Search**: AI-powered hotel search using embeddings and cosine similarity.
+- 🔒 **Authentication**: Secure sign-in/sign-up powered by **Clerk**.
+- 🚪 **Authorization**: Role-based access (e.g., admin-only hotel creation).
+- 📡 **RESTful API**: Well-structured endpoints for hotel management, bookings, and wishlist.
+- 💾 **Database**: Uses **MongoDB** with Mongoose.
+- ⭐ **Wishlist**: Users can add hotels to their wishlist and retrieve them.
+- 📅 **Hotel Booking**: Users can book hotels by selecting rooms, check-in/check-out dates, and special requests.
+- 💳 **Payment Integration**: Secure payment processing via Stripe embedded checkout.
+- 🔗 **Webhook Handling**: Automatic payment confirmation and booking fulfillment via Stripe webhooks.
+- 📧 **Email Automation**: Automatic booking receipt emails sent via N8N workflow after successful payments.
 - ❌ **Booking Cancellation**: Users can cancel their bookings from their account.
 
 ## Repositories
@@ -19,13 +22,15 @@ The **Hotel Booking System** backend is a robust API built with **Node.js** and 
 - **Backend**: [Hotel Booking Backend Repository](https://github.com/ZafraZiaudeen/Hotel-Booking-Back_end)
 
 ## Tech Stack
-- **Node.js**: JavaScript runtime.  
-- **Express**: Fast and lightweight backend framework.  
-- **MongoDB**: NoSQL database with Mongoose ODM.  
-- **Clerk**: Authentication and session management.  
-- **OpenAI**: AI integration for hotel search.  
-- **LangChain**: Framework for vector search.  
-- **Nodemon**: Auto-restart during development.  
+- **Node.js**: JavaScript runtime.
+- **Express**: Fast and lightweight backend framework.
+- **MongoDB**: NoSQL database with Mongoose ODM.
+- **Clerk**: Authentication and session management.
+- **OpenAI**: AI integration for hotel search.
+- **LangChain**: Framework for vector search.
+- **Stripe**: Payment processing and webhooks.
+- **N8N**: Workflow automation for email receipts.
+- **Nodemon**: Auto-restart during development.
 
 ## Installation & Setup
 ### Prerequisites
@@ -46,13 +51,16 @@ The **Hotel Booking System** backend is a robust API built with **Node.js** and 
    npm install
    ```
 
-3. **Set Up Environment Variables**  
+3. **Set Up Environment Variables**
    Create a `.env` file in the root directory and add:
    ```sh
    MONGODB_URL=mongodb+srv://<username>:<password>@cluster0.mongodb.net/hotels?retryWrites=true&w=majority
    CLERK_SECRET_KEY=your_clerk_secret_key
    CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
    OPENAI_API_KEY=your_openai_api_key
+   STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+   N8N_WEBHOOK_URL=your_n8n_webhook_url
+   FRONTEND_URL=http://localhost:5173
    ```
 
 4. **Start the Server**
